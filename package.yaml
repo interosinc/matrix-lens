@@ -1,0 +1,49 @@
+name:                matrix-lens
+version:             0.1.0.0
+github:              "interosinc/matrix-lens"
+license:             BSD3
+author:              "Interos, Inc."
+maintainer:          "jevans@interos.ai"
+copyright:           "2020 Interos, Inc."
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+synopsis:            Lenses for the "matrix" package
+category:            Math
+
+description:         See README at <https://github.com/interosinc/matrix-lens#readme>
+
+ghc-options:
+- -Weverything
+- -Werror
+- -Wno-all-missed-specialisations
+- -Wno-missed-specialisations
+- -Wno-missing-deriving-strategies
+- -Wno-missing-exported-signatures
+- -Wno-missing-import-lists
+- -Wno-missing-local-signatures
+- -Wno-monomorphism-restriction
+- -Wno-safe
+- -Wno-unsafe
+
+dependencies:
+- base >= 4.7 && < 5
+- lens
+- matrix
+- vector
+
+library:
+  source-dirs: src
+
+tests:
+  matrix-lens-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - matrix-lens
