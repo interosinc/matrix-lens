@@ -14,11 +14,6 @@ module Data.Matrix.Lens
   , switchingCols
   , switchingRows
   , transposed
-    -- ======== --
-  , exampleFloat
-  , exampleInt
-  , exampleInvertible
-  , exampleNotSquare
   ) where
 
 import           Prelude
@@ -26,7 +21,7 @@ import           Prelude
 import           Control.Lens        hiding ( set )
 import           Data.Bifunctor             ( first )
 import           Data.Matrix
-import           Data.Ratio                 ( Ratio )
+import           Data.Maybe                 ( fromMaybe )
 import           Data.Vector                ( Vector )
 import qualified Data.Vector    as V
 
@@ -79,33 +74,11 @@ setCol c m v = foldr ((\(r, x) -> setElem x (r, c))) m $
   zip [1..] (V.toList v)
 
 setSubmatrix :: (Int, Int) -> Matrix a -> Matrix a -> Matrix a
-setSubmatrix (_r, _c) _dst _src = error "setSubmatrix not implemented"
+setSubmatrix (r, c) dst src = foldr f dst indexedRows
+  where
+    indexedRows = zip [r..] . map (zip [c..]) . toLists $ src
+    f (r', indexedCols) dst' = foldr (g r') dst' indexedCols
+    g r' (c', x) dst' = fromMaybe dst' $ safeSet x (r', c') dst'
 
 setDiag :: Matrix a -> Vector a -> Matrix a
 setDiag _m _v = error "setDiag not implemented"
-
--- ================================================================ --
-
-exampleInt :: Matrix Int
-exampleInt = fromLists
-  [ [1, 2, 3]
-  , [4, 5, 6]
-  , [7, 8, 9]
-  ]
-
-exampleNotSquare :: Matrix Int
-exampleNotSquare = fromLists
-  [ [1,   2,  3]
-  , [4,   5,  6]
-  , [7,   8,  9]
-  , [10, 11, 12]
-  ]
-
-exampleFloat :: Matrix Float
-exampleFloat = fromIntegral <$> exampleInt
-
-exampleInvertible :: Matrix (Ratio Int)
-exampleInvertible = fromLists
-  [ [ -3, 1 ]
-  , [  5, 0 ]
-  ]

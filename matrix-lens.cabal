@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0bb3b41a9e7c477679baaea17a36c9849dfd53e030e0c21184c3cd0ad8877eba
+-- hash: d7a01d9ba27fbd8f8201ed9d53a0d879b6013cb9dbe07a24bb714fa2fd30ee30
 
 name:           matrix-lens
 version:        0.1.0.0
@@ -44,8 +44,9 @@ library
 
 test-suite matrix-lens-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Driver.hs
   other-modules:
+      MatrixLensTest
       Paths_matrix_lens
   hs-source-dirs:
       test
@@ -55,5 +56,9 @@ test-suite matrix-lens-test
     , lens
     , matrix
     , matrix-lens
+    , tasty
+    , tasty-discover
+    , tasty-hedgehog
+    , tasty-hspec
     , vector
   default-language: Haskell2010

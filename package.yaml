@@ -39,7 +39,7 @@ library:
 
 tests:
   matrix-lens-test:
-    main:                Spec.hs
+    main:                Driver.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -47,3 +47,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - matrix-lens
+    - tasty
+    - tasty-discover
+    - tasty-hedgehog
+    - tasty-hspec
