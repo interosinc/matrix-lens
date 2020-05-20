@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 
-synopsis:            Lenses for the "matrix" package
+synopsis:            Optics for the "matrix" package
 category:            Math
 
 description:         See README at <https://github.com/interosinc/matrix-lens#readme>

@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d7a01d9ba27fbd8f8201ed9d53a0d879b6013cb9dbe07a24bb714fa2fd30ee30
+-- hash: 4142441f566d4ba3636c667d8afc1773558271452702581c5dfa543519cbdb8a
 
 name:           matrix-lens
 version:        0.1.0.0
-synopsis:       Lenses for the "matrix" package
+synopsis:       Optics for the "matrix" package
 description:    See README at <https://github.com/interosinc/matrix-lens#readme>
 category:       Math
 homepage:       https://github.com/interosinc/matrix-lens#readme
