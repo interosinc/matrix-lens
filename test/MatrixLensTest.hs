@@ -32,7 +32,7 @@ import Data.Vector      as V ( fromList )
 import Test.Tasty.Hspec
 
 spec_elemAt :: Spec
-spec_elemAt = describe "elemAt" $ do
+spec_elemAt = do
   let m = exampleInt
 
   context "views the appropriate locations" $ do
@@ -54,6 +54,7 @@ spec_elemAt = describe "elemAt" $ do
             (m & elemAt p .~ 99) `shouldBe` fromLists expected
 
     traverse_ testSet $
+
       [ ((1, 1), [ [99, 2, 3]
                  , [4,  5, 6]
                  , [7,  8, 9]
@@ -73,14 +74,14 @@ spec_elemAt = describe "elemAt" $ do
       ]
 
 spec_row :: Spec
-spec_row = describe "row" $ do
+spec_row = do
   let m = exampleInt
 
   it "views the appropriate rows" $ do
     m ^. row 1 `shouldBe` V.fromList [1, 2, 3]
 
 spec_sub :: Spec
-spec_sub = describe "sub" $ do
+spec_sub = do
   let m = exampleInt
 
   it "sets the appropriate locations" $
@@ -98,53 +99,49 @@ spec_sub = describe "sub" $ do
       ]
 
 spec_minor :: Spec
-spec_minor = describe "minor" $ do
-  let (label, pair) = setup (1, 1) in context label $ do
-    it ("reads the appropriate locations " <> label) $
-      exampleInt ^. minor pair `shouldBeMatrix`
-        [ [ 5, 6 ]
-        , [ 8, 9 ]
-        ]
+spec_minor = do
 
-    it ("writes the approprite locations " <> label) $
-      (exampleInt & minor pair %~ transpose) `shouldBeMatrix`
-        [ [ 1, 2, 3 ]
-        , [ 4, 5, 8 ]
-        , [ 7, 6, 9 ]
-        ]
+  context "reads the appropriate locations" $ do
 
-  let (label, pair) = setup (2, 2) in context label $ do
+    let testView (pair, value) = let (label, p) = setup pair in
+          it ("at " <> label) $
+            exampleInt ^. minor p `shouldBeMatrix` value
 
-    it ("reads the appropriate locations" <> label) $
-      exampleInt ^. minor pair `shouldBeMatrix`
-        [ [ 1, 3 ]
-        , [ 7, 9 ]
-        ]
+    traverse_ testView
+      [ ((1, 1), [ [5, 6]
+                 , [8, 9]
+                 ])
+      , ((2, 2), [ [1, 3]
+                 , [7, 9]
+                 ])
+      , ((1, 2), [ [4, 6]
+                 , [7, 9]
+                 ])
+      ]
 
-    it ("writes the approprite locations " <> label) $
-      (exampleInt & minor pair %~ transpose) `shouldBeMatrix`
-        [ [ 1, 2, 7 ]
-        , [ 4, 5, 6 ]
-        , [ 3, 8, 9 ]
-        ]
+  context "sets the appropriate locations" $ do
 
-  let (label, pair) = setup (1, 2) in context label $ do
+    let testSet (pair, value) = let (label, p) = setup pair in
+          it ("at " <> label) $
+            (exampleInt & minor p %~ transpose) `shouldBeMatrix` value
 
-    it ("reads the appropriate locations" <> label) $
-      exampleInt ^. minor pair `shouldBeMatrix`
-        [ [ 4, 6 ]
-        , [ 7, 9 ]
-        ]
-
-    it ("writes the approprite locations " <> label) $
-      (exampleInt & minor pair %~ transpose) `shouldBeMatrix`
-        [ [ 1, 2, 3 ]
-        , [ 4, 5, 7 ]
-        , [ 6, 8, 9 ]
-        ]
+    traverse_ testSet
+      [ ((1, 1), [ [ 1, 2, 3 ]
+                 , [ 4, 5, 8 ]
+                 , [ 7, 6, 9 ]
+                 ])
+      , ((2, 2), [ [ 1, 2, 7 ]
+                 , [ 4, 5, 6 ]
+                 , [ 3, 8, 9 ]
+                 ])
+      , ((1, 2), [ [ 1, 2, 3 ]
+                 , [ 4, 5, 7 ]
+                 , [ 6, 8, 9 ]
+                 ])
+      ]
 
 spec_inverted :: Spec
-spec_inverted = describe "inverted" $ do
+spec_inverted = do
   it "inverts an invertible matrix" $
     exampleInvertible ^? inverted `shouldBeJustMatrix`
       [ [ 0 % 1, 1 % 5  ]
@@ -163,25 +160,34 @@ spec_inverted = describe "inverted" $ do
       ]
 
 spec_diag :: Spec
-spec_diag = describe "diag" $ do
+spec_diag = do
   context "given a square matrix" $ do
-    let matrix = exampleInt
+    let m = exampleInt
 
     it "reads the right values" $
-      matrix ^. diag `shouldBe` V.fromList [1, 5, 9]
+      m ^. diag `shouldBe` V.fromList [1, 5, 9]
 
     it "writes the right values" $
-      (matrix & diag .~ V.fromList [20, 60, 100]) `shouldBeMatrix`
+      (m & diag .~ V.fromList [20, 60, 100]) `shouldBeMatrix`
         [ [ 20,  2,   3 ]
         , [  4, 60,   6 ]
         , [  7,  8, 100 ]
         ]
 
   context "given a non-square matrix" $ do
-    let matrix = exampleNotSquare
+    let m = exampleNotSquare
 
     it "reads the right values" $ do
-      matrix ^. diag `shouldBe` V.fromList [10, 50, 90]
+      m ^. diag `shouldBe` V.fromList [10, 50, 90]
+
+
+    it "writes the right values" $
+      (m & diag .~ V.fromList [1, 2, 3]) `shouldBeMatrix`
+        [ [  1,  20,  30]
+        , [ 40,   2,  60]
+        , [ 70,  80,   3]
+        , [100, 110, 120]
+        ]
 
 -- ================================================================ --
 

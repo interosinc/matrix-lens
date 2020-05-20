@@ -11,6 +11,8 @@ module Data.Matrix.Lens
   , scaled
   , scalingRow
   , sub
+  , slidingCols
+  , slidingRows
   , switchingCols
   , switchingRows
   , transposed
@@ -50,6 +52,12 @@ switchingRows r1 r2 = iso (switchRows r1 r2) (switchRows r2 r1)
 switchingCols :: Int -> Int -> Iso' (Matrix a) (Matrix a)
 switchingCols c1 c2 = iso (switchCols c1 c2) (switchCols c2 c1)
 
+slidingRows :: Int -> Int -> Iso' (Matrix a) (Matrix a)
+slidingRows r1 r2 = iso (slideRows r1 r2) (slideRows r2 r1)
+
+slidingCols :: Int -> Int -> Iso' (Matrix a) (Matrix a)
+slidingCols c1 c2 = iso (slideCols c1 c2) (slideCols c2 c1)
+
 sub :: (Int, Int) -> (Int, Int) -> Lens' (Matrix a) (Matrix a)
 sub (r1, c1) (r2, c2) = lens (submatrix r1 r2 c1 c2) (setSubMatrix (r1, c1))
 
@@ -81,10 +89,40 @@ setSubMatrix (r, c) dst src = foldr f dst indexedRows
     f (r', indexedCols) dst' = foldr (g r') dst' indexedCols
     g r' (c', x) dst' = fromMaybe dst' $ safeSet x (r', c') dst'
 
-setMinorMatrix :: (Int, Int) -> Matrix a -> Matrix a -> Matrix a
-setMinorMatrix (_r, _c) _dst _src = error "setMinorMatrix not implemented"
+setMinorMatrix :: forall a. (Int, Int) -> Matrix a -> Matrix a -> Matrix a
+setMinorMatrix (r, c) dst src = sequenceA inserted
+  & fromMaybe (error "unpossible!")
+  where
+    inserted = foldr copyCol m' indexedCol
+      where
+        m' = foldr copyRow adjusted indexedRow
+
+        indexedCol = zip [1..] . V.toList $ dst ^. col c
+        indexedRow = zip [1..] . V.toList $ dst ^. row r
+
+        copyRow (c', x) = elemAt (r, c') .~ Just x
+        copyCol (r', x) = elemAt (r', c) .~ Just x
+
+    adjusted = injected ^. slidingRows (nrows mm + 1) r
+                         . slidingCols (ncols mm + 1) c
+
+    injected = extendTo Nothing (nrows mm + 1) (ncols mm + 1) mm
+
+    mm = Just <$> src
 
 setDiag :: Foldable t => Matrix a -> t a -> Matrix a
 setDiag m xs = foldr f m . zip [1..] . F.toList $ xs
   where
     f (n, x) m' = m' & elemAt (n, n) .~ x
+
+slideRows :: Int -> Int -> Matrix a -> Matrix a
+slideRows s d m
+  | s > d     = slideRows (s - 1) d $ m ^. switchingRows s (s - 1)
+  | s < d     = slideRows (s + 1) d $ m ^. switchingRows s (s + 1)
+  | otherwise = m
+
+slideCols :: Int -> Int -> Matrix a -> Matrix a
+slideCols s d m
+  | s > d     = slideCols (s - 1) d $ m ^. switchingCols s (s - 1)
+  | s < d     = slideCols (s + 1) d $ m ^. switchingCols s (s + 1)
+  | otherwise = m
