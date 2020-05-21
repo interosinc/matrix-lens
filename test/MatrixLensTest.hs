@@ -213,26 +213,25 @@ spec_examples = do
       ]
 
   it "should be able to set a minor matrix to one value" $
-    (exampleInt & minor (2, 2) . cells .~ 1) `shouldBeMatrix`
+    (exampleInt & minor (2, 2) . flattened .~ 1) `shouldBeMatrix`
       [ [1, 2, 1]
       , [4, 5, 6]
       , [1, 8, 1]
       ]
 
   it "should be able to set everything top to bottom" $
-    (exampleInt & partsOf cells .~ [90,80..]) `shouldBeMatrix`
+    (exampleInt & partsOf flattened .~ [90,80..]) `shouldBeMatrix`
       [ [90, 80, 70]
       , [60, 50, 40]
       , [30, 20, 10]
       ]
 
   it "should be able to reverse all cells" $
-    (exampleInt & partsOf cells %~ reverse) `shouldBeMatrix`
+    (exampleInt & partsOf flattened %~ reverse) `shouldBeMatrix`
       [ [9, 8, 7]
       , [6, 5, 4]
       , [3, 2, 1]
       ]
-
 
 -- ================================================================ --
 

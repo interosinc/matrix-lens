@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Data.Matrix.Lens
-  ( cells
+  ( flattened
   , col
   , cols
   , diag
@@ -68,8 +68,8 @@ slidingRows r1 r2 = iso (slideRows r1 r2) (slideRows r2 r1)
 slidingCols :: Int -> Int -> Iso' (Matrix a) (Matrix a)
 slidingCols c1 c2 = iso (slideCols c1 c2) (slideCols c2 c1)
 
-cells :: Traversal' (Matrix a) a
-cells = rows . each . each
+flattened :: Traversal' (Matrix a) a
+flattened = rows . each . each
 
 sub :: (Int, Int) -> (Int, Int) -> Lens' (Matrix a) (Matrix a)
 sub (r1, c1) (r2, c2) = lens (submatrix r1 r2 c1 c2) (setSubMatrix (r1, c1))
