@@ -35,11 +35,11 @@ import qualified Data.Vector    as V
 elemAt :: (Int, Int) -> Lens' (Matrix a) a
 elemAt (i, j) = lens (getElem i j) (\m x -> setElem x (i, j) m)
 
-row :: Int -> Lens' (Matrix a) (Vector a)
-row r = lens (getRow r) (setRow r)
+row :: Int -> Lens' (Matrix a) [a]
+row r = lens (V.toList . getRow r) (\m -> setRow r m . V.fromList)
 
-col :: Int -> Lens' (Matrix a) (Vector a)
-col c = lens (getCol c) (setCol c)
+col :: Int -> Lens' (Matrix a) [a]
+col c = lens (V.toList . getCol c) (\m -> setCol c m . V.fromList)
 
 transposed :: Iso' (Matrix a) (Matrix a)
 transposed = iso transpose transpose
@@ -82,8 +82,8 @@ inverted = flip prism (\x -> first (const x) . inverse $ x) $ \x -> case inverse
   Left  _ -> x
   Right y -> y
 
-diag :: Lens' (Matrix a) (Vector a)
-diag = lens getDiag setDiag
+diag :: Lens' (Matrix a) [a]
+diag = lens (V.toList . getDiag) (\m -> setDiag m . V.fromList)
 
 -- ================================================================ --
 
@@ -110,8 +110,8 @@ setMinorMatrix (r, c) dst src = sequenceA inserted
       where
         m' = foldr copyRow adjusted indexedRow
 
-        indexedCol = zip [1..] . V.toList $ dst ^. col c
-        indexedRow = zip [1..] . V.toList $ dst ^. row r
+        indexedCol = zip [1..] $ dst ^. col c
+        indexedRow = zip [1..] $ dst ^. row r
 
         copyRow (c', x) = elemAt (r, c') ?~ x
         copyCol (r', x) = elemAt (r', c) ?~ x

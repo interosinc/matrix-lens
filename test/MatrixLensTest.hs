@@ -14,23 +14,22 @@ module MatrixLensTest
 
 import Prelude
 
-import Control.Lens          ( (%~)
-                             , (&)
-                             , (.~)
-                             , (^.)
-                             , (^?)
-                             , partsOf
-                             )
-import Data.Foldable         ( traverse_ )
-import Data.Matrix           ( Matrix
-                             , fromLists
-                             , transpose
-                             )
+import Control.Lens     ( (%~)
+                        , (&)
+                        , (.~)
+                        , (^.)
+                        , (^?)
+                        , partsOf
+                        )
+import Data.Foldable    ( traverse_ )
+import Data.Matrix      ( Matrix
+                        , fromLists
+                        , transpose
+                        )
 import Data.Matrix.Lens
-import Data.Ratio            ( (%)
-                             , Ratio
-                             )
-import Data.Vector      as V ( fromList )
+import Data.Ratio       ( (%)
+                        , Ratio
+                        )
 import Test.Tasty.Hspec
 
 spec_elemAt :: Spec
@@ -79,7 +78,7 @@ spec_row = do
   let m = exampleInt
 
   it "views the appropriate rows" $
-    m ^. row 1 `shouldBe` V.fromList [1, 2, 3]
+    m ^. row 1 `shouldBe` [1, 2, 3]
 
 spec_sub :: Spec
 spec_sub = do
@@ -166,10 +165,10 @@ spec_diag = do
     let m = exampleInt
 
     it "reads the right values" $
-      m ^. diag `shouldBe` V.fromList [1, 5, 9]
+      m ^. diag `shouldBe` [1, 5, 9]
 
     it "writes the right values" $
-      (m & diag .~ V.fromList [20, 60, 100]) `shouldBeMatrix`
+      (m & diag .~ [20, 60, 100]) `shouldBeMatrix`
         [ [ 20,  2,   3 ]
         , [  4, 60,   6 ]
         , [  7,  8, 100 ]
@@ -179,11 +178,11 @@ spec_diag = do
     let m = exampleNotSquare
 
     it "reads the right values" $
-      m ^. diag `shouldBe` V.fromList [10, 50, 90]
+      m ^. diag `shouldBe` [10, 50, 90]
 
 
     it "writes the right values" $
-      (m & diag .~ V.fromList [1, 2, 3]) `shouldBeMatrix`
+      (m & diag .~ [1, 2, 3]) `shouldBeMatrix`
         [ [  1,  20,  30]
         , [ 40,   2,  60]
         , [ 70,  80,   3]
