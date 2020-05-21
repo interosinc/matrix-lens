@@ -30,11 +30,14 @@ import           Data.Foldable              ( traverse_ )
 import           Data.Matrix                ( Matrix )
 import qualified Data.Matrix      as Matrix
 import           Data.Matrix.Lens
-import           Data.Maybe                 ( isJust )
+import           Data.Maybe                 ( isJust
+                                            , isNothing
+                                            )
 import           Data.Ratio                 ( (%)
                                             , Ratio
                                             )
 import           Hedgehog                   ( Gen
+                                            , MonadGen
                                             , Property
                                             , assert
                                             , forAll
@@ -271,30 +274,28 @@ hprop_squareMatricesHaveDeterminants = property $ do
 hprop_nonSquareMatricesHaveNoDeterminants :: Property
 hprop_nonSquareMatricesHaveNoDeterminants = property $ do
   m <- forAll genNonSquareMatrix
-  assert . not . isJust $ m ^. determinant
+  assert . isNothing $ m ^. determinant
 
 genSquareMatrix :: Gen (Matrix Int)
 genSquareMatrix = do
   sz <- genSize
-  (flip (set (partsOf flattened)) $ Matrix.identity sz) <$> genValues sz
-  where
-    genSize     = Gen.integral (Range.linear 2 10)
-    genValues n = Gen.list (Range.singleton $ n * n) genInt
-    genInt      = Gen.integral (Range.linearFrom 0 (-100) 100)
+  flip (set (partsOf flattened)) (Matrix.identity sz) <$> genValues (sz, sz)
 
 genNonSquareMatrix :: Gen (Matrix Int)
 genNonSquareMatrix = do
   r <- genSize
   c <- genSize
   guard $ r /= c
-  let (lo, hi) = (min r c, max r c)
-      idm      = Matrix.identity lo
-      m        = Matrix.extendTo 0 r c idm
-  (flip (set (partsOf flattened)) $ m) <$> genValues hi
+  let m = Matrix.extendTo 0 r c . Matrix.identity $ min r c
+  flip (set (partsOf flattened)) m <$> genValues (r, c)
+
+genValues :: (MonadGen m, Integral a) => (Int, Int) -> m [a]
+genValues (r, c) = Gen.list (Range.singleton $ r * c) genInt
   where
-    genSize     = Gen.integral (Range.linear 2 10)
-    genValues n = Gen.list (Range.singleton $ n * n) genInt
-    genInt      = Gen.integral (Range.linearFrom 0 (-100) 100)
+    genInt = Gen.integral (Range.linearFrom 0 (-100) 100)
+
+genSize :: MonadGen m => m Int
+genSize = Gen.integral (Range.linear 2 10)
 
 infix 1 `shouldBeMatrix`
 shouldBeMatrix :: (Eq a, Show a) => Matrix a -> [[a]] -> Expectation
@@ -329,6 +330,3 @@ exampleNotSquare = Matrix.fromLists
   , [70,   80,  90]
   , [100, 110, 120]
   ]
-
-_exampleFloat :: Matrix Float
-_exampleFloat = fromIntegral <$> exampleInt
