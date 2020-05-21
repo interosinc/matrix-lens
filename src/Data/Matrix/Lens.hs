@@ -88,11 +88,11 @@ diag = lens getDiag setDiag
 -- ================================================================ --
 
 setRow :: Int -> Matrix a -> Vector a -> Matrix a
-setRow r m v = foldr ((\(c, x) -> setElem x (r, c))) m $
+setRow r m v = foldr (\(c, x) -> setElem x (r, c)) m $
   zip [1..] (V.toList v)
 
 setCol :: Int -> Matrix a -> Vector a -> Matrix a
-setCol c m v = foldr ((\(r, x) -> setElem x (r, c))) m $
+setCol c m v = foldr (\(r, x) -> setElem x (r, c)) m $
   zip [1..] (V.toList v)
 
 setSubMatrix :: (Int, Int) -> Matrix a -> Matrix a -> Matrix a
@@ -113,8 +113,8 @@ setMinorMatrix (r, c) dst src = sequenceA inserted
         indexedCol = zip [1..] . V.toList $ dst ^. col c
         indexedRow = zip [1..] . V.toList $ dst ^. row r
 
-        copyRow (c', x) = elemAt (r, c') .~ Just x
-        copyCol (r', x) = elemAt (r', c) .~ Just x
+        copyRow (c', x) = elemAt (r, c') ?~ x
+        copyCol (r', x) = elemAt (r', c) ?~ x
 
     adjusted = injected ^. slidingRows (nrows mm + 1) r
                          . slidingCols (ncols mm + 1) c
@@ -124,7 +124,7 @@ setMinorMatrix (r, c) dst src = sequenceA inserted
     mm = Just <$> src
 
 setDiag :: Foldable t => Matrix a -> t a -> Matrix a
-setDiag m xs = foldr f m . zip [1..] . F.toList $ xs
+setDiag m = foldr f m . zip [1..] . F.toList
   where
     f (n, x) m' = m' & elemAt (n, n) .~ x
 

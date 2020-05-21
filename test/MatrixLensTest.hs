@@ -43,7 +43,7 @@ spec_elemAt = do
           it ("at " <> label) $
             m ^. elemAt p `shouldBe` value
 
-    traverse_ testView $
+    traverse_ testView
       [ ((1, 1), 1)
       , ((1, 2), 2)
       , ((2, 1), 4)
@@ -55,8 +55,7 @@ spec_elemAt = do
           it ("at " <> label) $
             (m & elemAt p .~ 99) `shouldBe` fromLists expected
 
-    traverse_ testSet $
-
+    traverse_ testSet
       [ ((1, 1), [ [99, 2, 3]
                  , [4,  5, 6]
                  , [7,  8, 9]
@@ -79,7 +78,7 @@ spec_row :: Spec
 spec_row = do
   let m = exampleInt
 
-  it "views the appropriate rows" $ do
+  it "views the appropriate rows" $
     m ^. row 1 `shouldBe` V.fromList [1, 2, 3]
 
 spec_sub :: Spec
@@ -179,7 +178,7 @@ spec_diag = do
   context "given a non-square matrix" $ do
     let m = exampleNotSquare
 
-    it "reads the right values" $ do
+    it "reads the right values" $
       m ^. diag `shouldBe` V.fromList [10, 50, 90]
 
 
