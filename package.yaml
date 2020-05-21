@@ -46,6 +46,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - hedgehog
     - matrix-lens
     - tasty
     - tasty-discover

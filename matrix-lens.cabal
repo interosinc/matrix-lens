@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4142441f566d4ba3636c667d8afc1773558271452702581c5dfa543519cbdb8a
+-- hash: b9a09db51ea8bc3d19a14f1e735f4a9bf5506e46afffcd6e170860166836fe90
 
 name:           matrix-lens
 version:        0.1.0.0
@@ -53,6 +53,7 @@ test-suite matrix-lens-test
   ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hedgehog
     , lens
     , matrix
     , matrix-lens

@@ -3,7 +3,10 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 module MatrixLensTest
-  ( spec_diag
+  ( hprop_squareMatricesHaveDeterminants
+  , hprop_nonSquareMatricesHaveNoDeterminants
+  , spec_determinant
+  , spec_diag
   , spec_elemAt
   , spec_examples
   , spec_inverted
@@ -12,25 +15,34 @@ module MatrixLensTest
   , spec_sub
   ) where
 
-import Prelude
+import           Prelude
 
-import Control.Lens     ( (%~)
-                        , (&)
-                        , (.~)
-                        , (^.)
-                        , (^?)
-                        , partsOf
-                        )
-import Data.Foldable    ( traverse_ )
-import Data.Matrix      ( Matrix
-                        , fromLists
-                        , transpose
-                        )
-import Data.Matrix.Lens
-import Data.Ratio       ( (%)
-                        , Ratio
-                        )
-import Test.Tasty.Hspec
+import           Control.Lens               ( (%~)
+                                            , (&)
+                                            , (.~)
+                                            , (^.)
+                                            , (^?)
+                                            , partsOf
+                                            , set
+                                            )
+import           Control.Monad              ( guard )
+import           Data.Foldable              ( traverse_ )
+import           Data.Matrix                ( Matrix )
+import qualified Data.Matrix      as Matrix
+import           Data.Matrix.Lens
+import           Data.Maybe                 ( isJust )
+import           Data.Ratio                 ( (%)
+                                            , Ratio
+                                            )
+import           Hedgehog                   ( Gen
+                                            , Property
+                                            , assert
+                                            , forAll
+                                            , property
+                                            )
+import qualified Hedgehog.Gen     as Gen
+import qualified Hedgehog.Range   as Range
+import           Test.Tasty.Hspec
 
 spec_elemAt :: Spec
 spec_elemAt = do
@@ -52,7 +64,7 @@ spec_elemAt = do
   context "sets the appropriate locations" $ do
     let testSet (pair, expected) = let (label, p) = setup pair in
           it ("at " <> label) $
-            (m & elemAt p .~ 99) `shouldBe` fromLists expected
+            (m & elemAt p .~ 99) `shouldBe` Matrix.fromLists expected
 
     traverse_ testSet
       [ ((1, 1), [ [99, 2, 3]
@@ -92,7 +104,7 @@ spec_sub = do
       ]
 
   it "modifies the appropriate locations" $
-    (m & sub (2, 2) (3, 3) %~ transpose) `shouldBeMatrix`
+    (m & sub (2, 2) (3, 3) %~ Matrix.transpose) `shouldBeMatrix`
       [ [1, 2, 3]
       , [4, 5, 8]
       , [7, 6, 9]
@@ -123,7 +135,7 @@ spec_minor = do
 
     let testSet (pair, value) = let (label, p) = setup pair in
           it ("at " <> label) $
-            (exampleInt & minor p %~ transpose) `shouldBeMatrix` value
+            (exampleInt & minor p %~ Matrix.transpose) `shouldBeMatrix` value
 
     traverse_ testSet
       [ ((1, 1), [ [ 1, 2, 3 ]
@@ -192,7 +204,7 @@ spec_diag = do
 spec_examples :: Spec
 spec_examples = do
   it "should be able to transpose a minor matrix" $
-    (exampleInt & minor (1, 1) %~ transpose) `shouldBeMatrix`
+    (exampleInt & minor (1, 1) %~ Matrix.transpose) `shouldBeMatrix`
       [ [1, 2, 3]
       , [4, 5, 8]
       , [7, 6, 9]
@@ -233,15 +245,64 @@ spec_examples = do
       , [3, 2, 1]
       ]
 
--- ================================================================ --
+spec_determinant :: Spec
+spec_determinant = do
+  let m3x3 = Matrix.fromLists
+               [ [6,  1, 1 :: Int]
+               , [4, -2, 5]
+               , [2,  8, 7]
+               ]
+      m2x2 = m3x3 ^. minor (1, 1)
+
+  it "should return Nothing on non-square matrices" $
+    exampleNotSquare ^. determinant `shouldBe` Nothing
+
+  it "should work for 2x2 matrices" $
+    m2x2 ^. determinant `shouldBe` Just (-54)
+
+  it "should work for > 2x2 square matrices" $
+    m3x3 ^. determinant `shouldBe` Just (-306)
+
+hprop_squareMatricesHaveDeterminants :: Property
+hprop_squareMatricesHaveDeterminants = property $ do
+  m <- forAll genSquareMatrix
+  assert . isJust $ m ^. determinant
+
+hprop_nonSquareMatricesHaveNoDeterminants :: Property
+hprop_nonSquareMatricesHaveNoDeterminants = property $ do
+  m <- forAll genNonSquareMatrix
+  assert . not . isJust $ m ^. determinant
+
+genSquareMatrix :: Gen (Matrix Int)
+genSquareMatrix = do
+  sz <- genSize
+  (flip (set (partsOf flattened)) $ Matrix.identity sz) <$> genValues sz
+  where
+    genSize     = Gen.integral (Range.linear 2 10)
+    genValues n = Gen.list (Range.singleton $ n * n) genInt
+    genInt      = Gen.integral (Range.linearFrom 0 (-100) 100)
+
+genNonSquareMatrix :: Gen (Matrix Int)
+genNonSquareMatrix = do
+  r <- genSize
+  c <- genSize
+  guard $ r /= c
+  let (lo, hi) = (min r c, max r c)
+      idm      = Matrix.identity lo
+      m        = Matrix.extendTo 0 r c idm
+  (flip (set (partsOf flattened)) $ m) <$> genValues hi
+  where
+    genSize     = Gen.integral (Range.linear 2 10)
+    genValues n = Gen.list (Range.singleton $ n * n) genInt
+    genInt      = Gen.integral (Range.linearFrom 0 (-100) 100)
 
 infix 1 `shouldBeMatrix`
 shouldBeMatrix :: (Eq a, Show a) => Matrix a -> [[a]] -> Expectation
-shouldBeMatrix x y = x `shouldBe` fromLists y
+shouldBeMatrix x y = x `shouldBe` Matrix.fromLists y
 
 infix 1 `shouldBeJustMatrix`
 shouldBeJustMatrix :: (Eq a, Show a) => Maybe (Matrix a) -> [[a]] -> Expectation
-shouldBeJustMatrix x y = x `shouldBe` Just (fromLists y)
+shouldBeJustMatrix x y = x `shouldBe` Just (Matrix.fromLists y)
 
 setup :: (Int, Int) -> (String, (Int, Int))
 setup = (,) =<< show
@@ -249,20 +310,20 @@ setup = (,) =<< show
 -- ================================================================ --
 
 exampleInt :: Matrix Int
-exampleInt = fromLists
+exampleInt = Matrix.fromLists
   [ [1, 2, 3]
   , [4, 5, 6]
   , [7, 8, 9]
   ]
 
 exampleInvertible :: Matrix (Ratio Int)
-exampleInvertible = fromLists
+exampleInvertible = Matrix.fromLists
   [ [ -3, 1 ]
   , [  5, 0 ]
   ]
 
 exampleNotSquare :: Matrix Int
-exampleNotSquare = fromLists
+exampleNotSquare = Matrix.fromLists
   [ [10,   20,  30]
   , [40,   50,  60]
   , [70,   80,  90]

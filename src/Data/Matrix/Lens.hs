@@ -5,15 +5,20 @@ module Data.Matrix.Lens
   ( flattened
   , col
   , cols
+  , determinant
   , diag
   , elemAt
+  , getDeterminant
+  , getSize
   , inverted
+  , isSquare
   , minor
   , row
   , rows
   , scaled
   , scalingRow
   , sub
+  , size
   , slidingCols
   , slidingRows
   , switchingCols
@@ -87,6 +92,53 @@ diag = lens (V.toList . getDiag) (\m -> setDiag m . V.fromList)
 
 -- ================================================================ --
 
+--   :: Getter (Matrix a) (Int, Int)
+size :: Optic' (->) (Const (Int, Int)) (Matrix a) (Int, Int)
+size = to getSize
+
+getSize :: Matrix a -> (Int, Int)
+getSize m = (nrows m, ncols m)
+
+--          :: Getter (Matrix a) (Maybe a)
+determinant :: (Contravariant f, Num a, Profunctor p)
+            => p (Maybe a) (f (Maybe a))
+            -> p (Matrix a) (f (Matrix a))
+determinant = to getDeterminant
+
+getDeterminant :: Num a => Matrix a -> Maybe a
+getDeterminant m
+  | m ^. size == (2, 2) = Just . twoByTwoDet $ m
+  | otherwise           = laplace m
+
+twoByTwoDet :: Num a => Matrix a -> a
+twoByTwoDet m = case map ((m ^.) . elemAt) coords of
+  [a, b, c, d] -> a * d - b * c
+  _other       -> error "unpossible! (2)"
+  where
+    coords =
+      [ (1, 1)
+      , (1, 2)
+      , (2, 1)
+      , (2, 2)
+      ]
+
+laplace :: Num a => Matrix a -> Maybe a
+laplace m
+  | not . isSquare $ m = Nothing
+  | otherwise = Just . sum . zipWith (*) (cycle [1, -1]) . map f $ [1..ncols m]
+  where
+    r   = 1
+    f c = ((e *) <$> getDeterminant (m ^. minor pair))
+            & fromMaybe (error "unpossible! (3)")
+      where
+        e    = m ^. elemAt pair
+        pair = (r, c)
+
+isSquare :: Matrix a -> Bool
+isSquare = uncurry (==) . getSize
+
+-- ================================================================ --
+
 setRow :: Int -> Matrix a -> Vector a -> Matrix a
 setRow r m v = foldr (\(c, x) -> setElem x (r, c)) m $
   zip [1..] (V.toList v)
@@ -104,7 +156,7 @@ setSubMatrix (r, c) dst src = foldr f dst indexedRows
 
 setMinorMatrix :: forall a. (Int, Int) -> Matrix a -> Matrix a -> Matrix a
 setMinorMatrix (r, c) dst src = sequenceA inserted
-  & fromMaybe (error "unpossible!")
+  & fromMaybe (error "unpossible! (1)")
   where
     inserted = foldr copyCol m' indexedCol
       where
