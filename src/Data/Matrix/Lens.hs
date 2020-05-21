@@ -2,12 +2,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Data.Matrix.Lens
-  ( col
+  ( cells
+  , col
+  , cols
   , diag
   , elemAt
   , inverted
   , minor
   , row
+  , rows
   , scaled
   , scalingRow
   , sub
@@ -22,8 +25,9 @@ import           Prelude
 
 import           Control.Lens        hiding ( set )
 import           Data.Bifunctor             ( first )
-import           Data.Foldable  as F        ( toList )
-import           Data.Matrix    as M
+import qualified Data.Foldable  as F        ( toList )
+import qualified Data.List      as L
+import           Data.Matrix
 import           Data.Maybe                 ( fromMaybe )
 import           Data.Vector                ( Vector )
 import qualified Data.Vector    as V
@@ -43,6 +47,12 @@ transposed = iso transpose transpose
 scaled :: Num a => a -> Iso' (Matrix a) (Matrix a)
 scaled n = iso (scaleMatrix n) (scaleMatrix . negate $ n)
 
+rows :: Lens' (Matrix a) [[a]]
+rows = lens toLists (const fromLists)
+
+cols :: Lens' (Matrix a) [[a]]
+cols = lens (L.transpose . toLists) (const (fromLists . L.transpose))
+
 scalingRow :: Num a => Int -> a -> Iso' (Matrix a) (Matrix a)
 scalingRow r n = iso (scaleRow n r) (scaleRow (negate n) r)
 
@@ -57,6 +67,9 @@ slidingRows r1 r2 = iso (slideRows r1 r2) (slideRows r2 r1)
 
 slidingCols :: Int -> Int -> Iso' (Matrix a) (Matrix a)
 slidingCols c1 c2 = iso (slideCols c1 c2) (slideCols c2 c1)
+
+cells :: Traversal' (Matrix a) a
+cells = rows . each . each
 
 sub :: (Int, Int) -> (Int, Int) -> Lens' (Matrix a) (Matrix a)
 sub (r1, c1) (r2, c2) = lens (submatrix r1 r2 c1 c2) (setSubMatrix (r1, c1))

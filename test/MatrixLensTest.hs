@@ -5,6 +5,7 @@
 module MatrixLensTest
   ( spec_diag
   , spec_elemAt
+  , spec_examples
   , spec_inverted
   , spec_minor
   , spec_row
@@ -18,6 +19,7 @@ import Control.Lens          ( (%~)
                              , (.~)
                              , (^.)
                              , (^?)
+                             , partsOf
                              )
 import Data.Foldable         ( traverse_ )
 import Data.Matrix           ( Matrix
@@ -188,6 +190,51 @@ spec_diag = do
         , [ 70,  80,   3]
         , [100, 110, 120]
         ]
+
+spec_examples :: Spec
+spec_examples = do
+  it "should be able to transpose a minor matrix" $
+    (exampleInt & minor (1, 1) %~ transpose) `shouldBeMatrix`
+      [ [1, 2, 3]
+      , [4, 5, 8]
+      , [7, 6, 9]
+      ]
+
+  it "should be able to reverse rows" $
+    (exampleInt & rows %~ reverse) `shouldBeMatrix`
+      [ [7, 8, 9]
+      , [4, 5, 6]
+      , [1, 2, 3]
+      ]
+
+  it "should be able to reverse cols" $
+    (exampleInt & cols %~ reverse) `shouldBeMatrix`
+      [ [3, 2, 1]
+      , [6, 5, 4]
+      , [9, 8, 7]
+      ]
+
+  it "should be able to set a minor matrix to one value" $
+    (exampleInt & minor (2, 2) . cells .~ 1) `shouldBeMatrix`
+      [ [1, 2, 1]
+      , [4, 5, 6]
+      , [1, 8, 1]
+      ]
+
+  it "should be able to set everything top to bottom" $
+    (exampleInt & partsOf cells .~ [90,80..]) `shouldBeMatrix`
+      [ [90, 80, 70]
+      , [60, 50, 40]
+      , [30, 20, 10]
+      ]
+
+  it "should be able to reverse all cells" $
+    (exampleInt & partsOf cells %~ reverse) `shouldBeMatrix`
+      [ [9, 8, 7]
+      , [6, 5, 4]
+      , [3, 2, 1]
+      ]
+
 
 -- ================================================================ --
 
