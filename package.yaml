@@ -15,18 +15,39 @@ category:            Math
 
 description:         See README at <https://github.com/interosinc/matrix-lens#readme>
 
-ghc-options:
-- -Weverything
-- -Werror
-- -Wno-all-missed-specialisations
-- -Wno-missed-specialisations
-- -Wno-missing-deriving-strategies
-- -Wno-missing-exported-signatures
-- -Wno-missing-import-lists
-- -Wno-missing-local-signatures
-- -Wno-monomorphism-restriction
-- -Wno-safe
-- -Wno-unsafe
+flags:
+  developer:
+    description: Developer mode -- stricter handling of compiler warnings.
+    manual: True
+    default: False
+
+when:
+  - condition: flag(developer)
+    then:
+      ghc-options:
+      - -Weverything
+      - -Werror
+      - -Wno-all-missed-specialisations
+      - -Wno-missed-specialisations
+      - -Wno-missing-deriving-strategies
+      - -Wno-missing-exported-signatures
+      - -Wno-missing-import-lists
+      - -Wno-missing-local-signatures
+      - -Wno-monomorphism-restriction
+      - -Wno-safe
+      - -Wno-unsafe
+    else:
+      ghc-options:
+      - -Weverything
+      - -Wno-all-missed-specialisations
+      - -Wno-missed-specialisations
+      - -Wno-missing-deriving-strategies
+      - -Wno-missing-exported-signatures
+      - -Wno-missing-import-lists
+      - -Wno-missing-local-signatures
+      - -Wno-monomorphism-restriction
+      - -Wno-safe
+      - -Wno-unsafe
 
 dependencies:
 - base >= 4.7 && < 5

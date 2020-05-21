@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b9a09db51ea8bc3d19a14f1e735f4a9bf5506e46afffcd6e170860166836fe90
+-- hash: c2e1236eeea9068f31cfff4621d8d9ef0ef3762fa985d6a92cf3471d432c3bfb
 
 name:           matrix-lens
 version:        0.1.0.0
@@ -27,6 +27,11 @@ source-repository head
   type: git
   location: https://github.com/interosinc/matrix-lens
 
+flag developer
+  description: Developer mode -- stricter handling of compiler warnings.
+  manual: True
+  default: False
+
 library
   exposed-modules:
       Data.Matrix.Lens
@@ -34,12 +39,15 @@ library
       Paths_matrix_lens
   hs-source-dirs:
       src
-  ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
   build-depends:
       base >=4.7 && <5
     , lens
     , matrix
     , vector
+  if flag(developer)
+    ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
+  else
+    ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
   default-language: Haskell2010
 
 test-suite matrix-lens-test
@@ -50,7 +58,7 @@ test-suite matrix-lens-test
       Paths_matrix_lens
   hs-source-dirs:
       test
-  ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , hedgehog
@@ -62,4 +70,8 @@ test-suite matrix-lens-test
     , tasty-hedgehog
     , tasty-hspec
     , vector
+  if flag(developer)
+    ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
+  else
+    ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
   default-language: Haskell2010
