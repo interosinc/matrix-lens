@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c2e1236eeea9068f31cfff4621d8d9ef0ef3762fa985d6a92cf3471d432c3bfb
+-- hash: 13a435e19b5b5506f53542804bf8de6525f05a40af6d314e8ff7716045a6a86a
 
 name:           matrix-lens
 version:        0.1.0.0
@@ -35,6 +35,8 @@ flag developer
 library
   exposed-modules:
       Data.Matrix.Lens
+      Data.Matrix.Lens.Internal
+      Data.Matrix.Lens.Oof
   other-modules:
       Paths_matrix_lens
   hs-source-dirs:

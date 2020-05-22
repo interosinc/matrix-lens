@@ -1,10 +1,13 @@
+{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 module MatrixLensTest
-  ( hprop_squareMatricesHaveDeterminants
+  ( hprop_diagIsLesserOfRC
+  , hprop_invertedHasSameDimensions
   , hprop_nonSquareMatricesHaveNoDeterminants
+  , hprop_squareMatricesHaveDeterminants
   , spec_determinant
   , spec_diag
   , spec_elemAt
@@ -19,13 +22,19 @@ import           Prelude
 
 import           Control.Lens               ( (%~)
                                             , (&)
+                                            , (*~)
                                             , (.~)
                                             , (^.)
                                             , (^?)
+                                            , Lens'
+                                            , each
                                             , partsOf
                                             , set
+                                            , view
                                             )
-import           Control.Monad              ( guard )
+import           Control.Monad              ( guard
+                                            , replicateM
+                                            )
 import           Data.Foldable              ( traverse_ )
 import           Data.Matrix                ( Matrix )
 import qualified Data.Matrix      as Matrix
@@ -36,7 +45,8 @@ import           Data.Maybe                 ( isJust
 import           Data.Ratio                 ( (%)
                                             , Ratio
                                             )
-import           Hedgehog                   ( Gen
+import           Hedgehog                   ( (===)
+                                            , Gen
                                             , MonadGen
                                             , Property
                                             , assert
@@ -174,6 +184,11 @@ spec_inverted = do
       , [ (-10) % 13, 25 % 13 ]
       ]
 
+hprop_invertedHasSameDimensions :: Property
+hprop_invertedHasSameDimensions = property $ do
+  m <- forAll genInvertibleMatrix
+  m ^? inverted . size === Just (m ^. size)
+
 spec_diag :: Spec
 spec_diag = do
   context "given a square matrix" $ do
@@ -203,6 +218,11 @@ spec_diag = do
         , [ 70,  80,   3]
         , [100, 110, 120]
         ]
+
+hprop_diagIsLesserOfRC :: Property
+hprop_diagIsLesserOfRC = property $ do
+  m <- forAll $ Gen.choice [genSquareMatrix, genNonSquareMatrix]
+  length (m ^. diag) === min (Matrix.nrows m) (Matrix.ncols m)
 
 spec_examples :: Spec
 spec_examples = do
@@ -276,6 +296,21 @@ hprop_nonSquareMatricesHaveNoDeterminants = property $ do
   m <- forAll genNonSquareMatrix
   assert . isNothing $ m ^. determinant
 
+-- ================================================================ --
+
+infix 1 `shouldBeMatrix`
+shouldBeMatrix :: (Eq a, Show a) => Matrix a -> [[a]] -> Expectation
+shouldBeMatrix x y = x `shouldBe` Matrix.fromLists y
+
+infix 1 `shouldBeJustMatrix`
+shouldBeJustMatrix :: (Eq a, Show a) => Maybe (Matrix a) -> [[a]] -> Expectation
+shouldBeJustMatrix x y = x `shouldBe` Just (Matrix.fromLists y)
+
+setup :: (Int, Int) -> (String, (Int, Int))
+setup = (,) =<< show
+
+-- ================================================================ --
+
 genSquareMatrix :: Gen (Matrix Int)
 genSquareMatrix = do
   sz <- genSize
@@ -289,6 +324,96 @@ genNonSquareMatrix = do
   let m = Matrix.extendTo 0 r c . Matrix.identity $ min r c
   flip (set (partsOf flattened)) m <$> genValues (r, c)
 
+type MRI = Matrix RI
+type RI = Ratio Int
+
+data ElementaryOp
+  = InterchangeCols Int Int
+  | InterchangeRows Int Int
+  | ScaleRow Int RI
+  | ScaleCol Int RI
+  | ScaleAndAddRow Int Int RI
+  | ScaleAndAddCol Int Int RI
+  deriving (Eq, Show)
+
+genInvertibleMatrix :: Gen MRI
+genInvertibleMatrix = do
+  (sz, im) <- (,) <*> Matrix.identity <$> genSize
+  nOps <- genSize
+  foldr ($) im <$> replicateM nOps (genOp sz)
+  where
+    genOp :: Int -> Gen (MRI -> MRI)
+    genOp sz = makeFun <$> genEOp sz
+
+    makeFun :: ElementaryOp -> (MRI -> MRI)
+    makeFun = \case
+      InterchangeRows r1 r2   -> view (switchingRows r1 r2)
+      InterchangeCols c1 c2   -> view (switchingCols c1 c2)
+      ScaleRow        r     n -> row r . each *~ n
+      ScaleCol        c     n -> col c . each *~ n
+      ScaleAndAddRow  r1 r2 n -> scaleAndAdd row r1 r2 n
+      ScaleAndAddCol  c1 c2 n -> scaleAndAdd col c1 c2 n
+
+    scaleAndAdd :: (Int -> Lens' MRI [RI]) -> Int -> Int -> RI -> MRI -> MRI
+    scaleAndAdd acc a b n m = m & acc a %~ zipWith (+) (map (*n) $ m ^. acc b)
+
+    genEOp :: Int -> Gen ElementaryOp
+    genEOp n = Gen.choice
+      [ genIR n
+      , genIC n
+      , genSR n
+      , genSC n
+      , genAR n
+      , genAC n
+      ]
+
+    -- TODOD
+    genIR :: Int -> Gen ElementaryOp
+    genIR n = do
+      r1 <- genOneToN n
+      r2 <- genOneToN n
+      guard $ r1 /= r2
+      pure $ InterchangeRows r1 r2
+
+    genIC :: Int -> Gen ElementaryOp
+    genIC n = do
+      c1 <- genOneToN n
+      c2 <- genOneToN n
+      guard $ c1 /= c2
+      pure $ InterchangeCols c1 c2
+
+    genSR :: Int -> Gen ElementaryOp
+    genSR n = do
+      r1 <- genOneToN n
+      sc <- genScale
+      pure $ ScaleRow r1 sc
+
+    genSC :: Int -> Gen ElementaryOp
+    genSC n = do
+      c1 <- genOneToN n
+      sc <- genScale
+      pure $ ScaleRow c1 sc
+
+    genAR :: Int -> Gen ElementaryOp
+    genAR n = do
+      r1 <- genOneToN n
+      r2 <- genOneToN n
+      sc <- genScale
+      pure $ ScaleAndAddRow r1 r2 sc
+
+    genAC :: Int -> Gen ElementaryOp
+    genAC n = do
+      c1 <- genOneToN n
+      c2 <- genOneToN n
+      sc <- genScale
+      pure $ ScaleAndAddCol c1 c2 sc
+
+    genOneToN :: Int -> Gen Int
+    genOneToN n = Gen.int (Range.linearFrom 1 1 n)
+
+    genScale :: Gen RI
+    genScale = fromIntegral <$> Gen.int (Range.linearFrom 1 1 500)
+
 genValues :: (MonadGen m, Integral a) => (Int, Int) -> m [a]
 genValues (r, c) = Gen.list (Range.singleton $ r * c) genInt
   where
@@ -296,17 +421,6 @@ genValues (r, c) = Gen.list (Range.singleton $ r * c) genInt
 
 genSize :: MonadGen m => m Int
 genSize = Gen.integral (Range.linear 2 10)
-
-infix 1 `shouldBeMatrix`
-shouldBeMatrix :: (Eq a, Show a) => Matrix a -> [[a]] -> Expectation
-shouldBeMatrix x y = x `shouldBe` Matrix.fromLists y
-
-infix 1 `shouldBeJustMatrix`
-shouldBeJustMatrix :: (Eq a, Show a) => Maybe (Matrix a) -> [[a]] -> Expectation
-shouldBeJustMatrix x y = x `shouldBe` Just (Matrix.fromLists y)
-
-setup :: (Int, Int) -> (String, (Int, Int))
-setup = (,) =<< show
 
 -- ================================================================ --
 
