@@ -26,27 +26,27 @@ module Data.Matrix.Lens
 
 import           Prelude
 
-import           Control.Lens                   hiding ( set )
-import           Data.Bifunctor                        ( first )
-import qualified Data.Foldable             as F        ( toList )
-import qualified Data.List                 as L
+import           Control.Lens                            hiding ( set )
+import           Data.Bifunctor                                 ( first )
+import qualified Data.Foldable                      as F        ( toList )
+import qualified Data.List                          as L
 import           Data.Matrix
-import           Data.Matrix.Lens.Internal as X        ( col
-                                                       , elemAt
-                                                       , isSquare
-                                                       , minor
-                                                       , row
-                                                       , rows
-                                                       , slidingCols
-                                                       , slidingRows
-                                                       , switchingCols
-                                                       , switchingRows
-                                                       )
-import           Data.Matrix.Lens.Oof                  ( determinant
-                                                       , size
-                                                       )
-import           Data.Maybe                            ( fromMaybe )
-import qualified Data.Vector               as V
+import           Data.Matrix.Lens.Internal          as X        ( col
+                                                                , elemAt
+                                                                , isSquare
+                                                                , minor
+                                                                , row
+                                                                , rows
+                                                                , slidingCols
+                                                                , slidingRows
+                                                                , switchingCols
+                                                                , switchingRows
+                                                                )
+import           Data.Matrix.Lens.Internal.Warnings             ( determinant
+                                                                , size
+                                                                )
+import           Data.Maybe                                     ( fromMaybe )
+import qualified Data.Vector                        as V
 
 transposed :: Iso' (Matrix a) (Matrix a)
 transposed = iso transpose transpose

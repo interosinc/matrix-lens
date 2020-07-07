@@ -178,7 +178,6 @@ spec_inverted = do
       exampleInvertible
 
   it "modifies correctly" $
-    -- TODO confirm this is actually correct?
     (exampleInvertible & inverted . elemAt (1, 1) .~ 5 % 2) `shouldBeMatrix`
       [ [ 6 % 13, (-2) % 13 ]
       , [ (-10) % 13, 25 % 13 ]
@@ -367,7 +366,6 @@ genInvertibleMatrix = do
       , genAC n
       ]
 
-    -- TODOD
     genIR :: Int -> Gen ElementaryOp
     genIR n = do
       r1 <- genOneToN n
