@@ -207,8 +207,6 @@ The transposition of the matrix can be accessed via the `transposed` Iso:
 └          ┘
 ```
 
-
-
 You can also traverse the `flattened` matrix:
 
 ``` haskell
@@ -233,6 +231,26 @@ which is more useful for making modifications:
 │  1  2  3 │
 │  4 50 60 │
 │ 70 80 90 │
+└          ┘
+```
+
+Or a resized copy of the matrix:
+
+``` haskell
+λ> exampleInt ^. resized 99 (5, 5)
+┌                ┐
+│  1  2  3 99 99 │
+│  4  5  6 99 99 │
+│  7  8  9 99 99 │
+│ 99 99 99 99 99 │
+│ 99 99 99 99 99 │
+└                ┘
+
+λ> exampleInt & resized 99 (5, 5) . diag %~ reverse
+┌          ┐
+│ 99  2  3 │
+│  4 99  6 │
+│  7  8  9 │
 └          ┘
 ```
 

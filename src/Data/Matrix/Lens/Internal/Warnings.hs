@@ -3,6 +3,7 @@
 -- -Wredundant-constraints enabled for everything else.  If anyone knows a
 -- better way to handle this, please let me know.
 
+{-# LANGUAGE RankNTypes                    #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Data.Matrix.Lens.Internal.Warnings

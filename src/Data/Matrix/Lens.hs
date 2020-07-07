@@ -11,6 +11,7 @@ module Data.Matrix.Lens
   , inverted
   , isSquare
   , minor
+  , resized
   , row
   , rows
   , scaled
@@ -33,6 +34,7 @@ import qualified Data.List                          as L
 import           Data.Matrix
 import           Data.Matrix.Lens.Internal          as X        ( col
                                                                 , elemAt
+                                                                , getSize
                                                                 , isSquare
                                                                 , minor
                                                                 , row
@@ -83,3 +85,7 @@ diag = lens (V.toList . getDiag) (\m -> setDiag m . V.fromList)
     setDiag m = foldr f m . zip [1..] . F.toList
       where
         f (n, x) m' = m' & elemAt (n, n) .~ x
+
+
+resized :: a -> (Int, Int) -> Lens' (Matrix a) (Matrix a)
+resized e (r, c) = lens (setSize e r c) (uncurry (setSize e) . getSize)
