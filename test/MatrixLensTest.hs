@@ -52,6 +52,7 @@ import           Hedgehog                   ( (===)
                                             , assert
                                             , forAll
                                             , property
+                                            , withDiscards
                                             )
 import qualified Hedgehog.Gen     as Gen
 import qualified Hedgehog.Range   as Range
@@ -184,7 +185,7 @@ spec_inverted = do
       ]
 
 hprop_invertedHasSameDimensions :: Property
-hprop_invertedHasSameDimensions = property $ do
+hprop_invertedHasSameDimensions = withDiscards 200 . property $ do
   m <- forAll genInvertibleMatrix
   m ^? inverted . size === Just (m ^. size)
 
