@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8c0349b6e0370fb8821cd9edc6127cc768c8c6aadc19142ded46f56728772668
+-- hash: 853a69950c400cb9cafc73a36a7bfd908a1c2890c5a47196defaeb91ba08e83f
 
 name:           matrix-lens
 version:        0.1.0.0
@@ -43,9 +43,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
-    , lens
-    , matrix
-    , vector
+    , lens >=4.19.2 && <4.20
+    , matrix >=0.3.6 && <0.4
+    , vector >=0.12.1 && <0.13
   if flag(developer)
     ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
   else
@@ -64,14 +64,14 @@ test-suite matrix-lens-test
   build-depends:
       base >=4.7 && <5
     , hedgehog
-    , lens
-    , matrix
+    , lens >=4.19.2 && <4.20
+    , matrix >=0.3.6 && <0.4
     , matrix-lens
     , tasty
     , tasty-discover
     , tasty-hedgehog
     , tasty-hspec
-    , vector
+    , vector >=0.12.1 && <0.13
   if flag(developer)
     ghc-options: -Weverything -Werror -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-deriving-strategies -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
   else

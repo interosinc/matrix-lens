@@ -2,3 +2,7 @@ resolver: lts-15.13
 
 packages:
 - .
+
+extra-deps:
+- lens-4.19.2@sha256:f0570ca0e4624d9daa57256f00f514e87be155401583fa1665faba47376c63a7,16053
+
