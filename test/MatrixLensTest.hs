@@ -382,30 +382,16 @@ genInvertibleMatrix = do
       pure $ InterchangeCols c1 c2
 
     genSR :: Int -> Gen ElementaryOp
-    genSR n = do
-      r1 <- genOneToN n
-      sc <- genScale
-      pure $ ScaleRow r1 sc
+    genSR n = ScaleRow <$> genOneToN n <*> genScale
 
     genSC :: Int -> Gen ElementaryOp
-    genSC n = do
-      c1 <- genOneToN n
-      sc <- genScale
-      pure $ ScaleRow c1 sc
+    genSC n = ScaleRow <$> genOneToN n <*> genScale
 
     genAR :: Int -> Gen ElementaryOp
-    genAR n = do
-      r1 <- genOneToN n
-      r2 <- genOneToN n
-      sc <- genScale
-      pure $ ScaleAndAddRow r1 r2 sc
+    genAR n = ScaleAndAddRow <$> genOneToN n <*> genOneToN n <*> genScale
 
     genAC :: Int -> Gen ElementaryOp
-    genAC n = do
-      c1 <- genOneToN n
-      c2 <- genOneToN n
-      sc <- genScale
-      pure $ ScaleAndAddCol c1 c2 sc
+    genAC n = ScaleAndAddCol <$> genOneToN n <*> genOneToN n <*> genScale
 
     genOneToN :: Int -> Gen Int
     genOneToN n = Gen.int (Range.linearFrom 1 1 n)
