@@ -367,14 +367,6 @@ Just ┌          ┐
 │ 10 20 30 │
 │ 40 50 60 │
 └          ┘
-
-
-λ> s = " 10 20 30 \n 40 50 60 "
-λ> s ^? _AsMatrix :: Maybe (Matrix Int)
-Just ┌          ┐
-│ 10 20 30 │
-│ 40 50 60 │
-└          ┘
 λ> s & _AsMatrix %~ (transpose :: Matrix Int -> Matrix Int)
 "\9484       \9488\n\9474 10 40 \9474\n\9474 20 50 \9474\n\9474 30 60 \9474\n\9492       \9496"
 λ> s' = s & _AsMatrix %~ (transpose :: Matrix Int -> Matrix Int)
