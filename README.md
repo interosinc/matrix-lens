@@ -346,3 +346,59 @@ Nothing
 λ> exampleNotSquare ^. size
 (4,3)
 ```
+
+In addition an `_AsMatrix` prism is provided that can be used to view a valid
+matrix inside any instance of the `AsMatrix` class.  Two instances are provided
+for `AsMatrix` - one for lists of lists and one for strings.  You can provide
+additonal instances to gain the ability to use the `_AsMatrix` prism on them.
+
+The existing instances work like so:
+
+``` haskell
+λ> ns = [[1..3], [4..6 :: Int]]
+λ> ns
+[[1,2,3],[4,5,6]]
+λ> ns & _AsMatrix %~ (transpose :: Matrix Int -> Matrix Int)
+[[1,4],[2,5],[3,6]]
+
+λ> s = " 10 20 30 \n 40 50 60 "
+λ> s ^? _AsMatrix :: Maybe (Matrix Int)
+Just ┌          ┐
+│ 10 20 30 │
+│ 40 50 60 │
+└          ┘
+
+
+λ> s = " 10 20 30 \n 40 50 60 "
+λ> s ^? _AsMatrix :: Maybe (Matrix Int)
+Just ┌          ┐
+│ 10 20 30 │
+│ 40 50 60 │
+└          ┘
+λ> s & _AsMatrix %~ (transpose :: Matrix Int -> Matrix Int)
+"\9484       \9488\n\9474 10 40 \9474\n\9474 20 50 \9474\n\9474 30 60 \9474\n\9492       \9496"
+λ> s' = s & _AsMatrix %~ (transpose :: Matrix Int -> Matrix Int)
+λ> putStrLn s'
+┌       ┐
+│ 10 40 │
+│ 20 50 │
+│ 30 60 │
+└       ┘
+
+λ> t = show (fromLists [[1..3],[4..6 :: Int]]) :: String
+λ> putStrLn t
+┌       ┐
+│ 1 2 3 │
+│ 4 5 6 │
+└       ┘
+λ> t' = t & _AsMatrix %~ (transpose :: Matrix Int -> Matrix Int)
+λ> putStrLn t'
+┌     ┐
+│ 1 4 │
+│ 2 5 │
+│ 3 6 │
+└     ┘
+```
+
+NB. The `_AsMatrix` definition for String will read matrices with or without
+the unicode decorations on either side, but will always render them.

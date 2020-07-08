@@ -1,5 +1,8 @@
-{-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module Data.Matrix.Lens
   ( flattened
@@ -49,6 +52,40 @@ import           Data.Matrix.Lens.Internal.Warnings             ( determinant
                                                                 )
 import           Data.Maybe                                     ( fromMaybe )
 import qualified Data.Vector                        as V
+import           Text.Read                                      ( readMaybe )
+
+class AsMatrix a b where
+  toMatrix   :: a -> Maybe (Matrix b)
+  fromMatrix :: Matrix b -> a
+
+instance AsMatrix [[a]] a where
+  toMatrix   = Just <$> fromLists
+  fromMatrix = toLists
+
+instance (Read a, Show a) => AsMatrix String a where
+  toMatrix   = readMatrix
+  fromMatrix = show
+
+readMatrix :: Read a => String -> Maybe (Matrix a)
+readMatrix = fmap fromLists
+  . sequenceA
+  . map ( sequenceA
+        . map readMaybe
+        . filter (not . isDecoCol)
+        . words
+        )
+  . filter (not . isDecoLine)
+  . lines
+  where
+    isDecoCol = (== "│")
+
+    isDecoLine []       = False
+    isDecoLine (a:rest) = case reverse rest of
+          [] -> False
+          (b:rest') -> all (== ' ') rest' && (a, b) `elem` [('┌', '┐'), ('└', '┘')]
+
+_AsMatrix :: AsMatrix a b => Prism' a (Matrix b)
+_AsMatrix = prism fromMatrix (\x -> maybe (Left x) Right . toMatrix $ x)
 
 transposed :: Iso' (Matrix a) (Matrix a)
 transposed = iso transpose transpose
